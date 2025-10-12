@@ -1,0 +1,379 @@
+<!-- Collision Report Generator UI Components -->
+
+<!-- Report Button Section (to be added to collision probability panel) -->
+<div id="report-section" style="display: none; margin-top: 15px;">
+    <button id="generate-report-btn" class="btn-report" onclick="generateCollisionReport()">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" style="margin-right: 8px;">
+            <path d="M14 4.5V14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h5.5L14 4.5zm-3 0A1.5 1.5 0 0 1 9.5 3V1H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V4.5h-2z"/>
+        </svg>
+        Generate Detailed Report
+    </button>
+    
+    <div id="report-loading" style="display: none;">
+        <div class="report-spinner"></div>
+        <span style="margin-left: 10px; color: #4ecdc4;">Generating report with AI...</span>
+    </div>
+</div>
+
+<!-- Report Modal -->
+<div id="report-modal" class="report-modal">
+    <div class="report-modal-content">
+        <div class="report-modal-header">
+            <h2>Collision Risk Analysis Report</h2>
+            <button class="report-close-btn" onclick="closeReportModal()">&times;</button>
+        </div>
+        
+        <div class="report-modal-body" id="report-content">
+            <!-- Report content will be inserted here -->
+        </div>
+        
+        <div class="report-modal-footer">
+            <button class="btn-download" onclick="downloadReportAsText()">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" style="margin-right: 5px;">
+                    <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/>
+                    <path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/>
+                </svg>
+                Download TXT
+            </button>
+            <button class="btn-download" onclick="downloadReportAsMarkdown()">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" style="margin-right: 5px;">
+                    <path d="M14 4.5V14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h5.5L14 4.5zm-3 0A1.5 1.5 0 0 1 9.5 3V1H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V4.5h-2z"/>
+                </svg>
+                Download MD
+            </button>
+            <button class="btn-close" onclick="closeReportModal()">Close</button>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Report Button Styles */
+.btn-report {
+    background: linear-gradient(135deg, #337ab7 0%, #2e6da4 100%);
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 6px rgba(51, 122, 183, 0.3);
+    width: 100%;
+}
+
+.btn-report:hover {
+    background: linear-gradient(135deg, #2e6da4 0%, #337ab7 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(51, 122, 183, 0.4);
+}
+
+.btn-report:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+#report-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 15px;
+    background: rgba(78, 205, 196, 0.1);
+    border-radius: 8px;
+    margin-top: 10px;
+}
+
+.report-spinner {
+    width: 20px;
+    height: 20px;
+    border: 3px solid rgba(78, 205, 196, 0.3);
+    border-top-color: #4ecdc4;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Report Modal Styles */
+.report-modal {
+    display: none;
+    position: fixed;
+    z-index: 10000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.8);
+    align-items: center;
+    justify-content: center;
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.report-modal-content {
+    background-color: #1a1a2e;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 900px;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+    animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(50px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.report-modal-header {
+    padding: 20px 30px;
+    border-bottom: 2px solid #337ab7;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    border-radius: 12px 12px 0 0;
+}
+
+.report-modal-header h2 {
+    margin: 0;
+    color: #ffffff;
+    font-size: 24px;
+    font-weight: 600;
+}
+
+.report-close-btn {
+    background: none;
+    border: none;
+    color: #ffffff;
+    font-size: 32px;
+    cursor: pointer;
+    padding: 0;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: all 0.3s ease;
+}
+
+.report-close-btn:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    transform: rotate(90deg);
+}
+
+.report-modal-body {
+    padding: 30px;
+    overflow-y: auto;
+    flex: 1;
+    color: #e0e0e0;
+}
+
+.report-header {
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 25px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.report-header.risk-high {
+    background: linear-gradient(135deg, rgba(255, 107, 107, 0.2) 0%, rgba(255, 0, 0, 0.1) 100%);
+    border-left: 4px solid #ff6b6b;
+}
+
+.report-header.risk-medium {
+    background: linear-gradient(135deg, rgba(255, 165, 0, 0.2) 0%, rgba(255, 140, 0, 0.1) 100%);
+    border-left: 4px solid #ffa500;
+}
+
+.report-header.risk-low {
+    background: linear-gradient(135deg, rgba(78, 205, 196, 0.2) 0%, rgba(0, 128, 0, 0.1) 100%);
+    border-left: 4px solid #4ecdc4;
+}
+
+.risk-badge {
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-weight: bold;
+    font-size: 14px;
+    letter-spacing: 1px;
+}
+
+.risk-badge.risk-high {
+    background-color: #ff6b6b;
+    color: white;
+}
+
+.risk-badge.risk-medium {
+    background-color: #ffa500;
+    color: white;
+}
+
+.risk-badge.risk-low {
+    background-color: #4ecdc4;
+    color: white;
+}
+
+.report-metadata {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 15px;
+    margin-bottom: 25px;
+    padding: 20px;
+    background-color: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+}
+
+.metadata-item {
+    color: #e0e0e0;
+    font-size: 14px;
+}
+
+.metadata-item strong {
+    color: #4ecdc4;
+    margin-right: 5px;
+}
+
+.cache-indicator {
+    color: #ffa500;
+    font-style: italic;
+}
+
+.report-section {
+    margin-bottom: 25px;
+    padding: 20px;
+    background-color: rgba(255, 255, 255, 0.03);
+    border-radius: 8px;
+    border-left: 3px solid #337ab7;
+}
+
+.report-section h3 {
+    color: #4ecdc4;
+    margin-top: 0;
+    margin-bottom: 15px;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.report-section p {
+    line-height: 1.8;
+    color: #e0e0e0;
+    margin: 0;
+}
+
+.report-section.recommendations {
+    border-left-width: 4px;
+}
+
+.report-section.recommendations.risk-high {
+    border-left-color: #ff6b6b;
+    background-color: rgba(255, 107, 107, 0.05);
+}
+
+.report-section.recommendations.risk-medium {
+    border-left-color: #ffa500;
+    background-color: rgba(255, 165, 0, 0.05);
+}
+
+.report-section.recommendations.risk-low {
+    border-left-color: #4ecdc4;
+    background-color: rgba(78, 205, 196, 0.05);
+}
+
+.report-footer {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    text-align: center;
+    color: #888;
+}
+
+.report-modal-footer {
+    padding: 20px 30px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    background-color: rgba(0, 0, 0, 0.2);
+    border-radius: 0 0 12px 12px;
+}
+
+.btn-download, .btn-close {
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    display: inline-flex;
+    align-items: center;
+    transition: all 0.3s ease;
+}
+
+.btn-download {
+    background-color: #337ab7;
+    color: white;
+}
+
+.btn-download:hover {
+    background-color: #2e6da4;
+    transform: translateY(-2px);
+}
+
+.btn-close {
+    background-color: #555;
+    color: white;
+}
+
+.btn-close:hover {
+    background-color: #666;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .report-modal-content {
+        width: 95%;
+        max-height: 95vh;
+    }
+    
+    .report-modal-header,
+    .report-modal-body,
+    .report-modal-footer {
+        padding: 15px;
+    }
+    
+    .report-metadata {
+        grid-template-columns: 1fr;
+    }
+    
+    .report-modal-footer {
+        flex-direction: column;
+    }
+    
+    .btn-download, .btn-close {
+        width: 100%;
+        justify-content: center;
+    }
+}
+</style>

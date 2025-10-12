@@ -1,0 +1,423 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head prefix="og: http://ogp.me/ns#">
+    <title>Lynx</title>
+    <meta http-equiv="X-UA-Compatible" content="IE=8;FF=3;OtherUA=4" />
+    <meta http-equiv="content-type" content="text/html;charset=utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"
+    />
+
+    <link
+      type="text/css"
+      rel="stylesheet"
+      href="//fonts.googleapis.com/css?family=Orbitron:400,700|Oswald"
+    />
+    <link
+      type="text/css"
+      rel="stylesheet"
+      href="//js.arcgis.com/4.6/esri/css/main.css"
+    />
+    <link type="text/css" rel="stylesheet" href="css/bootstrap.min.css" />
+    <link
+      type="text/css"
+      rel="stylesheet"
+      href="css/bootstrap-slider.min.css"
+    />
+    <link type="text/css" rel="stylesheet" href="index.css" />
+
+    <script type="text/javascript" src="js/jquery-3.1.1.min.js"></script>
+    <script type="text/javascript" src="js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="js/bootstrap-slider.min.js"></script>
+    <script type="text/javascript" src="js/satellite.min.js"></script>
+    <script type="text/javascript" src="js/three.min.js"></script>
+    <script type="text/javascript" src="//js.arcgis.com/4.6/"></script>
+    <script type="text/javascript" src="js/Tween.js"></script>
+    <script type="text/javascript" src="index.js"></script>
+    <script type="text/javascript" src="report_generator.js"></script>
+    <script type="text/javascript">
+      // Add reset functionality when document is ready
+      $(document).ready(function() {
+        // Reset button functionality
+        $("#reset-selection-btn").click(function() {
+          // Clear all satellite selections (remove red dots)
+          if (window.renderer && window.renderer.satellites) {
+            $.each(window.renderer.satellites, function() {
+              this.selected = false;
+              this.highlighted = false;
+            });
+            
+            // Reset all filter buttons to "All" state
+            $(".rc-country > button").removeClass("active");
+            $(".rc-country > button[data-value='none']").addClass("active");
+            
+            $(".rc-type > button").removeClass("active");
+            $(".rc-type > button[data-value='none']").addClass("active");
+            
+            $(".rc-size > button").removeClass("active"); 
+            $(".rc-size > button[data-value='none']").addClass("active");
+            
+            // Hide orbit and information panels
+            window.renderer.hideOrbit();
+            $("#bottom-left").hide();
+            $("#botton-right-probability").hide();
+            
+            // Update selection and counter
+            window.renderer.updateSelection();
+            
+            // Update counter display (call the existing function if available)
+            if (typeof updateCounter === 'function') {
+              updateCounter();
+            } else {
+              $("#satellite-count").html(
+                window.renderer.satellites.length + " satellites loaded"
+              );
+            }
+            
+            console.log("Reset: All satellite selections cleared");
+          }
+        });
+      });
+    </script>
+  </head>
+
+  <body>
+    <div id="top">
+      <div id="heading">
+        <div class="title-row">
+          <div class="title-content">
+            <div class="main-title">Satellites</div>
+            <div class="subtitle">Made by</div>
+          </div>
+          <a href="index.html" class="home-button-link">
+            <button
+              type="button"
+              class="btn btn-default rc-button-square home-button active"
+              data-value="none"
+            >
+              Home
+            </button>
+          </a>
+          <div class="control-sections-container">
+            <div class="control-section type-section">
+              <div class="type-row">
+                <div class="rc-heading">Type:</div>
+                <div class="btn-group btn-group-sm rc-type" role="group">
+                  <button
+                    type="button"
+                    class="btn btn-default rc-button-square active"
+                    data-value="none"
+                  >
+                    All
+                  </button>
+                  <button
+                    type="button"
+                    class="btn btn-default rc-button-square"
+                    data-toggle="tooltip"
+                    data-placement="top"
+                    data-value="junk"
+                    title="Satellite debris, rockets and boosters"
+                  >
+                    Debris
+                  </button>
+                  <button
+                    type="button"
+                    class="btn btn-default rc-button-square"
+                    data-toggle="tooltip"
+                    data-placement="top"
+                    data-value="not-junk"
+                    title="Normal satellites"
+                  >
+                    Satellite
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div class="control-section country-section">
+              <div class="country-row">
+                <div class="rc-heading">Country:</div>
+                <div class="country-button-group">
+                  <div class="btn-group btn-group-sm rc-country" role="group">
+                    <button
+                      type="button"
+                      class="btn btn-default rc-button-square active"
+                      data-value="none"
+                    >
+                      All
+                    </button>
+                    <button
+                      type="button"
+                      class="btn btn-default rc-button-square"
+                      data-toggle="tooltip"
+                      data-placement="top"
+                      data-value="AUS"
+                      title="Australia"
+                    >
+                      AU
+                    </button>
+                    <button
+                      type="button"
+                      class="btn btn-default rc-button-square"
+                      data-toggle="tooltip"
+                      data-placement="top"
+                      data-value="CA"
+                      title="Canada"
+                    >
+                      CA
+                    </button>
+                    <button
+                      type="button"
+                      class="btn btn-default rc-button-square"
+                      data-toggle="tooltip"
+                      data-placement="top"
+                      data-value="PRC"
+                      title="China"
+                    >
+                      CN
+                    </button>
+                    <button
+                      type="button"
+                      class="btn btn-default rc-button-square"
+                      data-toggle="tooltip"
+                      data-placement="top"
+                      data-value="FR"
+                      title="France and Italy"
+                    >
+                      FR
+                    </button>
+                  </div>
+                  <div class="btn-group btn-group-sm rc-country" role="group">
+                    <button
+                      type="button"
+                      class="btn btn-default rc-button-square"
+                      data-toggle="tooltip"
+                      data-placement="top"
+                      data-value="IND"
+                      title="India"
+                    >
+                      IN
+                    </button>
+                    <button
+                      type="button"
+                      class="btn btn-default rc-button-square"
+                      data-toggle="tooltip"
+                      data-placement="top"
+                      data-value="JPN"
+                      title="Japan"
+                    >
+                      JP
+                    </button>
+                    <button
+                      type="button"
+                      class="btn btn-default rc-button-square"
+                      data-toggle="tooltip"
+                      data-placement="top"
+                      data-value="CIS"
+                      title="Russia"
+                    >
+                      RU
+                    </button>
+                    <button
+                      type="button"
+                      class="btn btn-default rc-button-square"
+                      data-toggle="tooltip"
+                      data-placement="top"
+                      data-value="UK"
+                      title="United Kingdom"
+                    >
+                      UK
+                    </button>
+                    <button
+                      type="button"
+                      class="btn btn-default rc-button-square"
+                      data-toggle="tooltip"
+                      data-placement="top"
+                      data-value="US"
+                      title="United States of America"
+                    >
+                      US
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- Size section moved here next to Country section -->
+            <div class="control-section size-section">
+              <div class="size-row">
+                <div class="rc-heading">Size:</div>
+                <div class="btn-group btn-group-sm rc-size" role="group">
+                  <button
+                    type="button"
+                    class="btn btn-default rc-button-square active"
+                    data-value="none"
+                  >
+                    All
+                  </button>
+                  <button
+                    type="button"
+                    class="btn btn-default rc-button-square"
+                    data-toggle="tooltip"
+                    data-placement="top"
+                    data-value="SMALL"
+                    title="Small radar cross-section"
+                  >
+                    Sm
+                  </button>
+                  <button
+                    type="button"
+                    class="btn btn-default rc-button-square"
+                    data-toggle="tooltip"
+                    data-placement="top"
+                    data-value="MEDIUM"
+                    title="Medium radar cross-section"
+                  >
+                    Med
+                  </button>
+                  <button
+                    type="button"
+                    class="btn btn-default rc-button-square"
+                    data-toggle="tooltip"
+                    data-placement="top"
+                    data-value="LARGE"
+                    title="Large radar cross-section"
+                  >
+                    Lg
+                  </button>
+                </div>
+              </div>
+            </div>
+            <!-- Reset button section -->
+            <div class="control-section reset-section">
+              <div class="reset-row">
+                <button
+                  type="button"
+                  id="reset-selection-btn"
+                  class="btn btn-default rc-button-square reset-button"
+                  data-toggle="tooltip"
+                  data-placement="top"
+                  title="Reset all selections and clear red dots"
+                >
+                  Reset
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="rc-panel-main">
+      </div>
+    </div>
+    <div id="bottom">
+      <div id="search-container">
+        <div class="search-input-row">
+          <input type="text" id="norad-input" placeholder="Enter NORAD ID/Satellite name" autocomplete="off" />
+          <button id="search-button">Search</button>
+        </div>
+        <div id="search-suggestions" class="search-suggestions"></div>
+      </div>
+      <div id="bottom-left">
+        <div class="rc-panel-info">
+          <div id="infoWindow-title" class="rc-title"></div>
+          <table>
+            <tr>
+              <td class="rc-table-heading">NORAD</td>
+              <td class="rc-table-value" id="infoWindow-norad"></td>
+            </tr>
+            <tr>
+              <td class="rc-table-heading">COSPAR</td>
+              <td class="rc-table-value" id="infoWindow-int"></td>
+            </tr>
+            <tr>
+              <td class="rc-table-heading">Country</td>
+              <td class="rc-table-value" id="infoWindow-country"></td>
+            </tr>
+            <tr>
+              <td class="rc-table-heading">Period</td>
+              <td class="rc-table-value" id="infoWindow-period"></td>
+            </tr>
+            <tr>
+              <td class="rc-table-heading">Inclination</td>
+              <td class="rc-table-value" id="infoWindow-inclination"></td>
+            </tr>
+            <tr>
+              <td class="rc-table-heading">Apogee</td>
+              <td class="rc-table-value" id="infoWindow-apogee"></td>
+            </tr>
+            <tr>
+              <td class="rc-table-heading">Perigee</td>
+              <td class="rc-table-value" id="infoWindow-perigee"></td>
+            </tr>
+            <tr>
+              <td class="rc-table-heading">Size</td>
+              <td class="rc-table-value" id="infoWindow-size"></td>
+            </tr>
+            <tr>
+              <td class="rc-table-heading">Launch</td>
+              <td class="rc-table-value" id="infoWindow-launch"></td>
+            </tr>
+          </table>
+          <div class="rc-heading">
+            Links <a id="link-n2yo" href="#" class="rc-vertical">N2YO</a>
+          </div>
+          <!-- <button type="button" id="link-n2yo">Back</button> -->
+        </div>
+      </div>
+      <div id="botton-right-probability">
+        <table id="table"></table>
+        
+        <!-- Report Generation Section -->
+        <div id="report-section" style="display: none; margin-top: 15px; padding: 10px;">
+          <button id="generate-report-btn" class="btn-report" onclick="generateCollisionReport()">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" style="margin-right: 8px;">
+              <path d="M14 4.5V14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h5.5L14 4.5zm-3 0A1.5 1.5 0 0 1 9.5 3V1H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V4.5h-2z"/>
+            </svg>
+            Generate Detailed Report
+          </button>
+          
+          <div id="report-loading" style="display: none; margin-top: 10px; text-align: center;">
+            <div class="report-spinner"></div>
+            <span style="margin-left: 10px; color: #4ecdc4;">Generating report with AI...</span>
+          </div>
+        </div>
+      </div>
+      <div id="bottom-right">
+        <div id="map"></div>
+        <div id="satellite-count"></div>
+
+      </div>
+    </div>
+    
+    <!-- Report Modal -->
+    <div id="report-modal" class="report-modal">
+      <div class="report-modal-content">
+        <div class="report-modal-header">
+          <h2>Collision Risk Analysis Report</h2>
+          <button class="report-close-btn" onclick="closeReportModal()">&times;</button>
+        </div>
+        
+        <div class="report-modal-body" id="report-content">
+          <!-- Report content will be inserted here -->
+        </div>
+        
+        <div class="report-modal-footer">
+          <button class="btn-download" onclick="downloadReportAsText()">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" style="margin-right: 5px;">
+              <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/>
+              <path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/>
+            </svg>
+            Download TXT
+          </button>
+          <button class="btn-download" onclick="downloadReportAsMarkdown()">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" style="margin-right: 5px;">
+              <path d="M14 4.5V14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h5.5L14 4.5zm-3 0A1.5 1.5 0 0 1 9.5 3V1H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V4.5h-2z"/>
+            </svg>
+            Download MD
+          </button>
+          <button class="btn-close" onclick="closeReportModal()">Close</button>
+        </div>
+      </div>
+    </div>
+    
+  </body>
+</html>
