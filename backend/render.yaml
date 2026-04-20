@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: satellite-collision-backend
+    runtime: python
+    plan: free
+    buildCommand: cd backend && pip install --upgrade pip setuptools wheel && pip install -r requirements.txt
+    startCommand: cd backend && python server.py
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.9
